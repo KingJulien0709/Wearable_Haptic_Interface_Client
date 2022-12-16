@@ -19,11 +19,8 @@
 struct sockaddr_in dest_addr;
 
 
-Adafruit_DRV2605 drv0;
-
 void setup() {
 
-  drv0.begin();
   Serial.begin(115200);
  
   delay(1000);

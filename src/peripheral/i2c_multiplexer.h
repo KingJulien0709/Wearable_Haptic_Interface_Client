@@ -5,8 +5,9 @@
 #include "service/i2c.h"
 
 
-void i2c_mult_init();
-void i2c_change_channel(uint8_t channel);
+void i2c_multiplexer_init();
+void i2c_multiplexer_change_channel(uint8_t channel);
+void i2c_multiplexer_reset(uint8_t resetPin);
 
 
 #endif

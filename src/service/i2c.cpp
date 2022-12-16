@@ -36,7 +36,7 @@ uint8_t i2c_read_without_register(uint8_t address){
     return data;
 }
 
-uint8_t i2c_read_with_register(uint8_t address, uint8_t register_address, uint8_t data_byte){
+uint8_t i2c_read_with_register(uint8_t address, uint8_t register_address){
     i2c_write_without_register(address,register_address);//data is register_address
     return i2c_read_without_register(address);
 }

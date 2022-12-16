@@ -1,7 +1,6 @@
 #include "drv.h"
 
-#define DRV_DEVICE_COUNTER 6
-#define DRV_ENABLE_PIN 13 // not yet decided
+
 
 /**
  * @brief inits all drv devices
@@ -23,7 +22,7 @@ void drv_init(){
  * @param channel given multiplexer-channel starting from 0 to DRV_DEVICE_COUNTER-1
  */
 void drv_single_init(uint8_t channel){
-    i2c_change_channel(channel);
+    i2c_multiplexer_change_channel(channel);
 }
 
 void drv_init_protocoll(){
