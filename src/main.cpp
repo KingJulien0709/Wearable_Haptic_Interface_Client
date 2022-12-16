@@ -1,17 +1,13 @@
 #include <Arduino.h>
-//#include "NimBLEDevice.h"
 #include "WiFi.h"
 #include "lwip/sockets.h"
 #include "lwip/err.h"
 #include "peripheral/i2c_multiplexer.h"
 
-#include "Adafruit_DRV2605.h"
+
 
 #define UPDATEINTERVAL_MS 20
 
-#define BLUETOOTH_NAME "ABCDEFGH"
-#define BLUETOOTH_PW "123456789"
-#define BLUETOOTH_CHARACTERISTIC_VIBR "64df34ef-ad6d-4a9e-8b35-803a564af80d"
 
 #define HOST_IP_ADDR "192.168.178.44"
 #define PORT 100
