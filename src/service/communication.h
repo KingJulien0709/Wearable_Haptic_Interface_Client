@@ -5,10 +5,11 @@
 #include "WiFi.h"
 #include "lwip/sockets.h"
 #include "lwip/err.h"
+#include <sys/select.h>
 
-void communication_init_wifi(const char* w_ssid,const char* w_pw);
+void communication_connect_wifi(const char* w_ssid,const char* w_pw);
 
-uint8_t communication_create_socket_connection(uint16_t port, const char* master_ip_address);
+void communication_create_socket_connection(uint16_t port, const char* master_ip_address);
 
 
 #endif
