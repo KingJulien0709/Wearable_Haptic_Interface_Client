@@ -30,8 +30,12 @@ void setup() {
   communication_connect_wifi(WIFI_SSID,WIFI_PASSWORT);
 
   my_tcp_socket.tcp_socket_init();
+  while(my_tcp_socket.tcp_socket_connect()!=0){
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+  }
 
-  communication_create_socket_connection(PORT,HOST_IP_ADDR);
+
+  //communication_create_socket_connection(PORT,HOST_IP_ADDR);
   //communication_create_socket_connection(PORT+100,HOST_IP_ADDR);
   //WiFi.mode(WIFI_STA);
   //WiFi.begin("FRITZ!Box Mesh-KK","00965943372456668602");
@@ -51,6 +55,11 @@ void setup() {
 }
 
 void loop() {
+
+  const char* result = my_tcp_socket.tcp_socket_receive_string();
+  Serial.println(result);
+  vTaskDelay(2500/portTICK_PERIOD_MS);
+  Serial.println("round");
 
   //char rx_buffer[128];
  //
