@@ -12,6 +12,7 @@
 
 class TCP_Socket_Communication{
     private:
+        bool blocking_mode_;
         int port_;
         const char* ip_address_;
         bool read_write_;
@@ -23,7 +24,9 @@ class TCP_Socket_Communication{
         int tcp_socket_connect();
         int tcp_socket_close();
         int tcp_socket_send_string(const char* data);
-        char* tcp_socket_receive_string();
+        char* tcp_socket_receive_string_blocking();
+        char* tcp_socket_receive_string_non_blocking();
+        void tcp_socket_configure_block_mode(bool block_mode);
 };
 
 #endif
