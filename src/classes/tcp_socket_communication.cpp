@@ -3,7 +3,7 @@
 
     
 TCP_Socket_Communication::TCP_Socket_Communication(int port, const char* ip_address, bool read_write){
-    blocking_mode_=false;
+    blocking_mode_=true;
     port_=port;
     ip_address_=ip_address;
     read_write_=read_write;
@@ -41,13 +41,20 @@ int TCP_Socket_Communication::tcp_socket_send_string(const char* data){
 
 char* TCP_Socket_Communication::tcp_socket_receive_string_blocking(){
     if(!blocking_mode_){
-        tcp_socket_configure_block_mode(true);
+        tcp_socket_configure_block_mode(true);  
     }
     static char data[TCP_SOCKET_READ_SIZE];
     int length = recv(socket_num_,data,sizeof(data)-1,0);
     if(length < 0){
-       Serial.println("[tcp_socket_communication]: Not enougth bytes received:" + String(length));
+       Serial.println("[tcp_socket_communication]: Error:" + String(length));
        data[0]= 0; 
+    }else if(length==0){
+        //connection closed by the master -> try to reconnect
+        if(tcp_socket_connect()!=0){
+            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
+            vTaskDelay(5000/portTICK_PERIOD_MS);
+        }
+        data[0]= 0;
     }else{
         data[length] = 0;
         Serial.println("[tcp_socket_communication]: received data:" + String(data));
@@ -70,6 +77,13 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_non_blocking(){
     if(length < 0){
        //Serial.println("[tcp_socket_communication]: Not enougth bytes received:" + String(length)); No message, because errors will happen a lot. But should not effect the program.
        data[0]= 0; 
+    }else if(length==0){
+        //connection closed by the master -> try to reconnect
+        if(tcp_socket_connect()!=0){
+            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
+            vTaskDelay(5000/portTICK_PERIOD_MS);
+        }
+        data[0]= 0;
     }else{
         data[length] = 0;
         Serial.println("[tcp_socket_communication]: received data:" + String(data));
