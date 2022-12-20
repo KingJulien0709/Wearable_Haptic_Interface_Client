@@ -56,10 +56,12 @@ void setup() {
 
 void loop() {
 
-  const char* result = my_tcp_socket.tcp_socket_receive_string_blocking();
-  Serial.println(result);
-  vTaskDelay(2500/portTICK_PERIOD_MS);
-  Serial.println("round");
+  const char* result = my_tcp_socket.tcp_socket_receive_string_non_blocking();
+  if(strlen(result)>0){
+    Serial.println(result);
+  }
+  vTaskDelay(50/portTICK_PERIOD_MS);
+  //Serial.println("round");
 
   //char rx_buffer[128];
  //
