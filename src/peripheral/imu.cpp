@@ -1,4 +1,4 @@
-#include "imu.h"
+#include "imu.hpp"
 
 /**
  * @brief init fuction for the imu-sensor

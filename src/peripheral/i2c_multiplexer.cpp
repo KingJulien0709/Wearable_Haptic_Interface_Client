@@ -1,4 +1,4 @@
-#include "i2c_multiplexer.h"
+#include "i2c_multiplexer.hpp"
 
 #define I2C_MULTIPLEXER_ADRESS 0x70
 

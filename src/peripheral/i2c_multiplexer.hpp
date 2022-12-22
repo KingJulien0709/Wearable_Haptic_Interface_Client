@@ -2,7 +2,7 @@
 #ifndef _I2C_MULTIPLEXER_H
 #define _I2C_MULTIPLEXER_H
 
-#include "service/i2c.h"
+#include "service/i2c.hpp"
 
 
 void i2c_multiplexer_init();

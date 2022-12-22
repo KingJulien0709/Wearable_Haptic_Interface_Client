@@ -1,4 +1,4 @@
-#include "communication.h"
+#include "communication.hpp"
 
 void communication_connect_wifi(const char* wifi_ssid,const char* wifi_passwort){
 

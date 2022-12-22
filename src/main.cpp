@@ -2,9 +2,10 @@
 #include "WiFi.h"
 #include "lwip/sockets.h"
 #include "lwip/err.h"
-#include "peripheral/i2c_multiplexer.h"
-#include "service/communication.h"
-#include  "classes/tcp_socket_communication.h"
+#include "peripheral/i2c_multiplexer.hpp"
+#include "service/communication.hpp"
+#include  "classes/tcp_socket_communication.hpp"
+#include "peripheral/bno_imu.hpp"
 
 
 #define UPDATEINTERVAL_MS 20
@@ -15,8 +16,12 @@
 #define HOST_IP_ADDR "192.168.178.44"
 #define PORT 100
 
+#define PIN_SDA 
+#define PIN_SCLK
+
 
 struct sockaddr_in dest_addr;
+int16_t arr[9];
 
 TCP_Socket_Communication my_tcp_socket(PORT,HOST_IP_ADDR,0); 
 
@@ -26,14 +31,20 @@ void setup() {
   Serial.begin(115200);
  
   delay(1000);
-  
-  communication_connect_wifi(WIFI_SSID,WIFI_PASSWORT);
+   Serial.println("start_1");
 
+  bno_imu_init();
+  
+  
+
+
+  communication_connect_wifi(WIFI_SSID,WIFI_PASSWORT);
+//
   my_tcp_socket.tcp_socket_init();
   while(my_tcp_socket.tcp_socket_connect()!=0){
     vTaskDelay(1000/portTICK_PERIOD_MS);
   }
-
+//
 
   //communication_create_socket_connection(PORT,HOST_IP_ADDR);
   //communication_create_socket_connection(PORT+100,HOST_IP_ADDR);
@@ -56,11 +67,26 @@ void setup() {
 
 void loop() {
 
-  const char* result = my_tcp_socket.tcp_socket_receive_string_non_blocking();
-  if(strlen(result)>0){
-    Serial.println(result);
-  }
-  vTaskDelay(50/portTICK_PERIOD_MS);
+  //const char* result = my_tcp_socket.tcp_socket_receive_string_non_blocking();
+  //if(strlen(result)>0){
+  //  Serial.println(result);
+  //}
+  
+  
+
+  bno_imu_get_sensor_data(arr);
+  String sensor_data_str = "s:"+String(arr[0])+";"+String(arr[1])+";"+String(arr[2])+0x00;
+
+  uint8_t len=sizeof(sensor_data_str);
+  char char_arr [30];
+  snprintf(char_arr,30,"s:%x;%x;%x",arr[0],arr[1],arr[2]);
+  Serial.println(char_arr);
+  Serial.println(sizeof(char_arr));
+  sensor_data_str.toCharArray(char_arr,len);
+  
+  Serial.println(sizeof(char_arr));
+  my_tcp_socket.tcp_socket_send_string(char_arr,len);
+  vTaskDelay(1000/portTICK_PERIOD_MS);
   //Serial.println("round");
 
   //char rx_buffer[128];

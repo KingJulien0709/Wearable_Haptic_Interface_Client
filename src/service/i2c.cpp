@@ -1,4 +1,4 @@
-#include "i2c.h"
+#include "i2c.hpp"
 
 
 void i2c_init(uint8_t sd_pin,uint8_t sc_pin){

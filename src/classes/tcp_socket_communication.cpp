@@ -1,4 +1,4 @@
-#include "tcp_socket_communication.h"
+#include "tcp_socket_communication.hpp"
 
 
     
@@ -30,11 +30,11 @@ int TCP_Socket_Communication::tcp_socket_connect(){
 int TCP_Socket_Communication::tcp_socket_close(){
     return closesocket(socket_num_);
 }
-int TCP_Socket_Communication::tcp_socket_send_string(const char* data){
+int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint8_t len){
     if(!blocking_mode_){
         tcp_socket_configure_block_mode(true);// send function has to be in blocking mode and wait until data is sent, because the data can be important for the master. 
     }
-    int sent_bytes_amount = send(socket_num_,data,sizeof(data),0);
+    int sent_bytes_amount = send(socket_num_,data,len,0);
     Serial.println("[tcp_socket_communication]: Bytes sent:" + String(sent_bytes_amount));
     return sent_bytes_amount;
 }
