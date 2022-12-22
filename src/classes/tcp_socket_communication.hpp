@@ -23,7 +23,7 @@ class TCP_Socket_Communication{
         void tcp_socket_init();
         int tcp_socket_connect();
         int tcp_socket_close();
-        int tcp_socket_send_string(const char* data);
+        int tcp_socket_send_string(char *data,uint8_t len);
         char* tcp_socket_receive_string_blocking();
         char* tcp_socket_receive_string_non_blocking();
         void tcp_socket_configure_block_mode(bool block_mode);

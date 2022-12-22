@@ -3,8 +3,8 @@
 #define _DRV_H
 
 #include "stdint.h"
-#include "i2c_multiplexer.h"
-#include "service/i2c.h"
+#include "i2c_multiplexer.hpp"
+#include "service/i2c.hpp"
 #include "Wire.h"
 
 #define DRV_DEVICE_COUNTER 5
