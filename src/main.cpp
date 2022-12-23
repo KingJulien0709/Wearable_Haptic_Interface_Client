@@ -20,6 +20,12 @@
 #define PIN_SCLK
 
 
+typedef struct imu_struct{
+  float r;
+  float h;
+  float p;
+} imu_struct_t;
+
 struct sockaddr_in dest_addr;
 int16_t arr[9];
 
@@ -74,19 +80,22 @@ void loop() {
   
   
 
-  bno_imu_get_sensor_data(arr);
-  String sensor_data_str = "s:"+String(arr[0])+";"+String(arr[1])+";"+String(arr[2])+0x00;
+  //bno_imu_get_sensor_data(arr);
+  //String sensor_data_str = "s:"+String(arr[0])+";"+String(arr[1])+";"+String(arr[2])+0x00;
+//
+  //uint8_t len=sizeof(sensor_data_str);
+  //char char_arr [30];
+  //snprintf(char_arr,30,"s:%8x;%8x;%8x",arr[0],arr[1],arr[2]);
+  //Serial.println(char_arr);
+  //
+  //sensor_data_str.toCharArray(char_arr,len);
+  //
 
-  uint8_t len=sizeof(sensor_data_str);
-  char char_arr [30];
-  snprintf(char_arr,30,"s:%x;%x;%x",arr[0],arr[1],arr[2]);
-  Serial.println(char_arr);
-  Serial.println(sizeof(char_arr));
-  sensor_data_str.toCharArray(char_arr,len);
-  
-  Serial.println(sizeof(char_arr));
-  my_tcp_socket.tcp_socket_send_string(char_arr,len);
-  vTaskDelay(1000/portTICK_PERIOD_MS);
+  char p[64];
+  bno_imu_get_sensor_data_struct_char(p);
+  Serial.println(p);
+  my_tcp_socket.tcp_socket_send_string(p,sizeof(p));
+  vTaskDelay(10/portTICK_PERIOD_MS);
   //Serial.println("round");
 
   //char rx_buffer[128];
