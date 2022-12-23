@@ -35,7 +35,14 @@ int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint8_t len){
         tcp_socket_configure_block_mode(true);// send function has to be in blocking mode and wait until data is sent, because the data can be important for the master. 
     }
     int sent_bytes_amount = send(socket_num_,data,len,0);
-    Serial.println("[tcp_socket_communication]: Bytes sent:" + String(sent_bytes_amount));
+    if(sent_bytes_amount<=0){
+         if(tcp_socket_connect()!=0){
+            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
+            vTaskDelay(5000/portTICK_PERIOD_MS);
+        }
+    }else{
+        Serial.println("[tcp_socket_communication]: Bytes sent:" + String(sent_bytes_amount));
+    }   
     return sent_bytes_amount;
 }
 
