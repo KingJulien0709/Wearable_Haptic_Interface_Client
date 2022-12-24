@@ -1,8 +1,8 @@
 #include "bno_imu.hpp"
 
 
-Adafruit_BNO055 bno=Adafruit_BNO055(550,0x28, &Wire);
-sensors_event_t event;
+Adafruit_BNO055 bno=Adafruit_BNO055(55,0x28, &Wire);
+sensors_event_t event_orientation , event_acceleration;
 
 struct imu_struct{
   float r;
@@ -23,25 +23,37 @@ void bno_imu_init(){
 
 void bno_imu_get_sensor_data(int16_t *arr){
     
-    bno.getEvent(&event);
-    arr[0]=(int16_t) event.orientation.heading;
-    arr[1]=(int16_t) event.orientation.pitch;
-    arr[2]=(int16_t) event.orientation.roll;
+    bno.getEvent(&event_orientation,Adafruit_BNO055::VECTOR_GYROSCOPE);
+    bno.getEvent(&event_acceleration,Adafruit_BNO055::VECTOR_ACCELEROMETER);
+
+    arr[0]=(int16_t) event_orientation.orientation.heading;
+    arr[1]=(int16_t) event_orientation.orientation.pitch;
+    arr[2]=(int16_t) event_orientation.orientation.roll;
+
+
      
     //Serial.println("heading: " + String() + " - pitch:"+String(event.orientation.pitch) + " - roll: "+ String(event.orientation.roll));
 
 }
 
 void bno_imu_get_sensor_data_struct_char(char* buf){
-    bno.getEvent(&event);
-    const int capacity = JSON_OBJECT_SIZE(3);
-    StaticJsonDocument<capacity> doc;
-    doc["h"]=event.orientation.heading;
-    doc["r"]=event.orientation.roll;
-    doc["p"]=event.orientation.pitch;
-    uint8_t len1 = measureJson(doc);
-    char arr[64];
-    serializeJson(doc,arr);
+    bno.getEvent(&event_orientation,Adafruit_BNO055::VECTOR_EULER);
+    bno.getEvent(&event_acceleration,Adafruit_BNO055::VECTOR_ACCELEROMETER);
+    //const int capacity = JSON_OBJECT_SIZE(6);
+    //StaticJsonDocument<capacity> doc;
+    //doc["h"]=event_orientation.orientation.heading,4;
+    //doc["r"]=event_orientation.orientation.roll,4;
+    //doc["p"]=event_orientation.orientation.pitch,4;
+    //doc["x"]=event_acceleration.acceleration.x,4;
+    //doc["y"]=event_acceleration.acceleration.y,4;
+    //doc["z"]=event_acceleration.acceleration.z,4;
+
+    //doc["y"]=event.acceleration.y;
+    //doc["z"]=event.acceleration.z;
+    char arr[128];
+    snprintf(arr, sizeof(arr),"{\"h\":%3.2f,\"r\":%3.2f,\"p\":%3.2f,\"x\":%3.2f,\"y\":%3.2f,\"z\":%3.2f}",event_orientation.orientation.heading,event_orientation.orientation.roll,event_orientation.orientation.pitch,event_acceleration.acceleration.x,event_acceleration.acceleration.y,event_acceleration.acceleration.z);
+
+    //serializeJson(doc,arr);
     //Serial.println(arr);
     //struct imu_struct temp_struct;
     //temp_struct.h=event.orientation.heading;
