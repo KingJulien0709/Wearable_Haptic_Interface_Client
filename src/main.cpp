@@ -91,11 +91,11 @@ void loop() {
   //sensor_data_str.toCharArray(char_arr,len);
   //
 
-  char p[64];
+  char p[128];
   bno_imu_get_sensor_data_struct_char(p);
   Serial.println(p);
   my_tcp_socket.tcp_socket_send_string(p,sizeof(p));
-  vTaskDelay(10/portTICK_PERIOD_MS);
+  vTaskDelay(250/portTICK_PERIOD_MS);
   //Serial.println("round");
 
   //char rx_buffer[128];

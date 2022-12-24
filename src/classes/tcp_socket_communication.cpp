@@ -38,6 +38,8 @@ int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint8_t len){
     if(sent_bytes_amount<=0){
          if(tcp_socket_connect()!=0){
             Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
+            tcp_socket_close();
+            tcp_socket_init();
             vTaskDelay(5000/portTICK_PERIOD_MS);
         }
     }else{
