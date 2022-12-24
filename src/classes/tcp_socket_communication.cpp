@@ -12,6 +12,7 @@ TCP_Socket_Communication::TCP_Socket_Communication(int port, const char* ip_addr
     sock_struct_local_.sin_family = AF_INET;
     
 }
+
 void TCP_Socket_Communication::tcp_socket_init(){
     socket_num_ = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
     if(socket_num_<0){
@@ -30,18 +31,23 @@ int TCP_Socket_Communication::tcp_socket_connect(){
 int TCP_Socket_Communication::tcp_socket_close(){
     return closesocket(socket_num_);
 }
+
+void TCP_Socket_Communication::tcp_socket_reconnect(){
+     if(tcp_socket_connect()!=0){
+            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
+            tcp_socket_close();
+            tcp_socket_init();
+            vTaskDelay(5000/portTICK_PERIOD_MS);
+        }
+}
+
 int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint8_t len){
     if(!blocking_mode_){
         tcp_socket_configure_block_mode(true);// send function has to be in blocking mode and wait until data is sent, because the data can be important for the master. 
     }
     int sent_bytes_amount = send(socket_num_,data,len,0);
     if(sent_bytes_amount<=0){
-         if(tcp_socket_connect()!=0){
-            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
-            tcp_socket_close();
-            tcp_socket_init();
-            vTaskDelay(5000/portTICK_PERIOD_MS);
-        }
+        tcp_socket_reconnect();
     }else{
         Serial.println("[tcp_socket_communication]: Bytes sent:" + String(sent_bytes_amount));
     }   
@@ -59,10 +65,7 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_blocking(){
        data[0]= 0; 
     }else if(length==0){
         //connection closed by the master -> try to reconnect
-        if(tcp_socket_connect()!=0){
-            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
-            vTaskDelay(5000/portTICK_PERIOD_MS);
-        }
+        tcp_socket_reconnect();
         data[0]= 0;
     }else{
         data[length] = 0;
@@ -88,10 +91,7 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_non_blocking(){
        data[0]= 0; 
     }else if(length==0){
         //connection closed by the master -> try to reconnect
-        if(tcp_socket_connect()!=0){
-            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
-            vTaskDelay(5000/portTICK_PERIOD_MS);
-        }
+        tcp_socket_reconnect();
         data[0]= 0;
     }else{
         data[length] = 0;
