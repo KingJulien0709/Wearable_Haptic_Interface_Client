@@ -50,6 +50,7 @@ void bno_imu_get_sensor_data_struct_char(char* buf){
 
     //doc["y"]=event.acceleration.y;
     //doc["z"]=event.acceleration.z;
+    Serial.println(event_orientation.orientation.heading);
     char arr[128];
     snprintf(arr, sizeof(arr),"{\"h\":%3.2f,\"r\":%3.2f,\"p\":%3.2f,\"x\":%3.2f,\"y\":%3.2f,\"z\":%3.2f}",event_orientation.orientation.heading,event_orientation.orientation.roll,event_orientation.orientation.pitch,event_acceleration.acceleration.x,event_acceleration.acceleration.y,event_acceleration.acceleration.z);
 

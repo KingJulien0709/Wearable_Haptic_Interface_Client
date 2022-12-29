@@ -6,6 +6,7 @@
 #include "service/communication.hpp"
 #include  "classes/tcp_socket_communication.hpp"
 #include "peripheral/bno_imu.hpp"
+#include <ArduinoJson.h>
 
 
 #define UPDATEINTERVAL_MS 20
@@ -30,7 +31,7 @@ struct sockaddr_in dest_addr;
 int16_t arr[9];
 
 TCP_Socket_Communication my_tcp_socket(PORT,HOST_IP_ADDR,0); 
-
+TaskHandle_t t;
 
 void setup() {
   
@@ -90,6 +91,26 @@ void loop() {
   //
   //sensor_data_str.toCharArray(char_arr,len);
   //
+
+  char buff[64];
+  strcpy(buff,my_tcp_socket.tcp_socket_receive_string_non_blocking());
+  uint8_t a=buff[0];
+  Serial.println(a);
+  //JSON_OBJECT_SIZE(6) // stop when buff is empty
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc,buff);// Empyt Input error when no msg received  ;  Invalid Input error when json String not complete
+  if(error){
+    Serial.println(error.f_str());
+  }else{
+    uint8_t drv_data_arr[5];
+    for(uint8_t i=0;i<5;i++){
+      drv_data_arr[i]=doc[String(i)];
+      //Serial.println(String(drv_data_arr[i]));
+    }
+  }
+  
+  
+
 
   char p[128];
   bno_imu_get_sensor_data_struct_char(p);
