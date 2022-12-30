@@ -1,12 +1,19 @@
 #include "tcp_socket_communication.hpp"
 
 
-    
-TCP_Socket_Communication::TCP_Socket_Communication(int port, const char* ip_address, bool read_write){
+/**
+ * @brief 
+ *  AF_INET - ip4
+ *  SOCK_STREAM - TCP
+ *  IPPROTO_TCP - protocol
+ * 
+ * @param port Port for the communication
+ * @param ip_address ip4 address of the server-master
+ */    
+TCP_Socket_Communication::TCP_Socket_Communication(int port, const char* ip_address){
     blocking_mode_=true;
     port_=port;
     ip_address_=ip_address;
-    read_write_=read_write;
     sock_struct_local_.sin_addr.s_addr=inet_addr(ip_address);
     sock_struct_local_.sin_port=htons(port);
     sock_struct_local_.sin_family = AF_INET;
@@ -18,13 +25,13 @@ void TCP_Socket_Communication::tcp_socket_init(){
     if(socket_num_<0){
         return;
     }
-    Serial.println("[tcp_socket_communication]: Socket with num:" + String(socket_num_));
+    log_info("Socket with num " + String(socket_num_));
 }
 int TCP_Socket_Communication::tcp_socket_connect(){
     
     int error = connect(socket_num_,(struct sockaddr*) &sock_struct_local_, sizeof(sock_struct_local_));
     if(error != 0){
-        Serial.println("[tcp_socket_communication]: Error when connecting socket:" + String(error));
+        log_error("Error when connecting socket:" + String(error));
     }
     return error;
 }
@@ -34,7 +41,7 @@ int TCP_Socket_Communication::tcp_socket_close(){
 
 void TCP_Socket_Communication::tcp_socket_reconnect(){
      if(tcp_socket_connect()!=0){
-            Serial.println("[tcp_socket_communication]: Error: Can not connect to master. Trying again in 5 seconds");
+            log_error("Error - Can not connect to master. Trying again in 5 seconds");
             tcp_socket_close();
             tcp_socket_init();
             vTaskDelay(5000/portTICK_PERIOD_MS);
@@ -49,7 +56,7 @@ int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint8_t len){
     if(sent_bytes_amount<=0){
         tcp_socket_reconnect();
     }else{
-        Serial.println("[tcp_socket_communication]: Bytes sent:" + String(sent_bytes_amount));
+        log_debug("Bytes sent:" + String(sent_bytes_amount));
     }   
     return sent_bytes_amount;
 }
@@ -61,7 +68,7 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_blocking(){
     static char data[TCP_SOCKET_READ_SIZE];
     int length = recv(socket_num_,data,sizeof(data)-1,0);
     if(length < 0){
-       Serial.println("[tcp_socket_communication]: Error:" + String(length));
+       log_error("Error " + String(length));
        data[0]= 0; 
     }else if(length==0){
         //connection closed by the master -> try to reconnect
@@ -69,7 +76,7 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_blocking(){
         data[0]= 0;
     }else{
         data[length] = 0;
-        Serial.println("[tcp_socket_communication]: received data:" + String(data));
+        log_debug("[tcp_socket_communication]: received data:" + String(data));
     }
     return data;
 }
@@ -87,7 +94,7 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_non_blocking(){
     static char data[TCP_SOCKET_READ_SIZE];
     int length = recv(socket_num_,data,sizeof(data)-1,MSG_DONTWAIT);
     if(length < 0){
-       //Serial.println("[tcp_socket_communication]: Not enougth bytes received:" + String(length)); No message, because errors will happen a lot. But should not effect the program.
+       log_trace("Not enougth bytes received:" + String(length));// trace message, because errors will happen a lot and can be more common than successful runs. But should not effect the program.
        data[0]= 0; 
     }else if(length==0){
         //connection closed by the master -> try to reconnect
@@ -95,7 +102,7 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_non_blocking(){
         data[0]= 0;
     }else{
         data[length] = 0;
-        Serial.println("[tcp_socket_communication]: received data:" + String(data));
+        log_debug("received data:" + String(data));
     }
     return data;
 }
