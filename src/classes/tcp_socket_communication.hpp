@@ -29,6 +29,7 @@ class TCP_Socket_Communication{
         char* tcp_socket_receive_string_non_blocking();
         void tcp_socket_configure_block_mode(bool block_mode);
         void tcp_socket_reconnect();
+        void tcp_socket_reinit();
 };
 
 #endif

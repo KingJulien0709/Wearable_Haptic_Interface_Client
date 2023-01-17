@@ -4,8 +4,9 @@
 
 
 void i2c_multiplexer_init(){
-
+    Wire.begin();
 }
+
 /**
  * @brief Change the channel of the multiplexer
  * 

@@ -55,6 +55,10 @@ void bno_imu_get_sensor_data_struct_char(char* buf){
     snprintf(arr, sizeof(arr),"{\"h\":%3.2f,\"r\":%3.2f,\"p\":%3.2f,\"x\":%3.2f,\"y\":%3.2f,\"z\":%3.2f}",
     event_orientation.orientation.heading,event_orientation.orientation.roll,event_orientation.orientation.pitch,
     event_acceleration.acceleration.x,event_acceleration.acceleration.y,event_acceleration.acceleration.z);
+    //snprintf(arr, sizeof(arr),"{\"h\":%3.2f,\"r\":%3.2f,\"p\":%3.2f,\"x\":%3.2f,\"y\":%3.2f,\"z\":%3.2f,\"m1\":%3.2f,\"m2\":%3.2f,\"m3\":%3.2f}",
+    //event_orientation.orientation.heading,event_orientation.orientation.roll,event_orientation.orientation.pitch,
+    //event_acceleration.acceleration.x,event_acceleration.acceleration.y,event_acceleration.acceleration.z,
+    //event_orientation.magnetic.x,event_orientation.magnetic.y,event_orientation.magnetic.z);
 
     log_debug(arr);
 
@@ -67,5 +71,5 @@ void bno_imu_get_sensor_data_struct_char(char* buf){
     //static char arr[sizeof(struct imu_struct)];//static ?
     //memcpy(arr,&temp_struct, sizeof(struct imu_struct));
     //Serial.println(String(arr));
-    strcpy(buf,arr);
+    strcpy(buf,arr);//maybe removeable
 }

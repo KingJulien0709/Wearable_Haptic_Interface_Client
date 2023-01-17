@@ -3,6 +3,7 @@
 #define _I2C_MULTIPLEXER_H
 
 #include "service/i2c.hpp"
+#include "Wire.h"
 
 
 void i2c_multiplexer_init();

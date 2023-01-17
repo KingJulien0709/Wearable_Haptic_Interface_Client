@@ -8,12 +8,13 @@
 #include "peripheral/bno_imu.hpp"
 #include <ArduinoJson.h>
 #include "utils/log.hpp"
+#include "peripheral/drv.hpp"
 
 
 #define UPDATEINTERVAL_MS 20
 
-#define WIFI_SSID "FRITZ!Box Mesh-KK"
-#define WIFI_PASSWORT "00965943372456668602"
+#define WIFI_SSID "FRITZ!Box Mesh-KK"// "Debug Network"
+#define WIFI_PASSWORT "00965943372456668602"//"1234567890"
 
 #define HOST_IP_ADDR "192.168.178.44"
 #define PORT 100
@@ -27,6 +28,18 @@ TCP_Socket_Communication my_tcp_socket(PORT,HOST_IP_ADDR);
 
 TaskHandle_t mainTask;//currently not used. maybe it will be implemented for dual core functionality
 
+//void setupTasks(){
+//  xTaskCreatePinnedToCore(
+//                    mainTaskFunction,   /* Task function. */
+//                    "mainTask",     /* name of task. */
+//                    10000,       /* Stack size of task */
+//                    NULL,        /* parameter of the task */
+//                    4,           /* priority of the task */
+//                    &mainTask,      /* Task handle to keep track of created task */
+//                    1);          /* pin task to core 1 */                  
+//  delay(500); 
+//} 
+
 //declare functions
 void handle_position_data(); 
 void handle_haptic_feedback();
@@ -37,7 +50,11 @@ void setup() {
 
   log_init(LOG_LEVEL_INFO); //set log levels for all modules to info
   
+  //i2c_multiplexer_init();
+
   bno_imu_init();
+
+  //drv_init();
 
   communication_connect_wifi(WIFI_SSID,WIFI_PASSWORT);
 
@@ -57,10 +74,13 @@ void loop() {
   vTaskDelay(250/portTICK_PERIOD_MS);
   
 }
+void mainTaskFunction( void * pvParameters ){
+
+}
 
 /**
  * @brief Function for dealing with the process for getting data from the imu to the master
- * 
+ * TODO try to reduce time. now about 10 ms -> try to come down to <5
  */
 void handle_position_data(){
   long a=millis();
@@ -68,7 +88,7 @@ void handle_position_data(){
   bno_imu_get_sensor_data_struct_char(p);
   log_debug(p);
   if(my_tcp_socket.tcp_socket_send_string(p,sizeof(p))==TCP_SOCKET_SEND_SIZE){
-    log_info("successful sent data in ms: "+ String(millis()-a));
+    log_info("successful sent and collected data in ms: "+ String(millis()-a));
   }else{
     //FIXME could handle error here
   }
@@ -102,3 +122,4 @@ void handle_haptic_feedback(){
     }
   }
 }
+
