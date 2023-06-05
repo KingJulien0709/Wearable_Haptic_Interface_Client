@@ -9,7 +9,7 @@ void bno_imu_init(){
     i2c_multiplexer_change_channel(BNO_IC2_CHANNEL);
     if(!bno.begin(OPERATION_MODE_NDOF)){
         /* There was a problem detecting the BNO055 ... check your connections */
-        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+        Serial.println("no BNO055 detected ... Check your wiring or I2C ADDR!");
         return;
     }
     delay(100);

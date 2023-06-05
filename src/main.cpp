@@ -20,7 +20,7 @@
 #define WIFI_SSID "Debug Network"//"FRITZ!Box Mesh-KK"
 #define WIFI_PASSWORT "1234567890"//"00965943372456668602"////
 
-#define HOST_IP_ADDR "192.168.178.31"//"192.168.178.44" //ip of the tcp master device
+#define HOST_IP_ADDR "192.168.43.226"//"192.168.178.31"//"192.168.178.44" //ip of the tcp master device
 #define PORT 5000 //port of the tcp socket
 
 //#define PIN_SDA currently not needed, because default pin is used
@@ -58,7 +58,7 @@ void setup() {
   
   bno_imu_init(); //function to initialize the imu
 
-  log_info("bno init done");
+  //log_info("bno init done");
 
   drv_init(); //function to initialize the drv driver
 
