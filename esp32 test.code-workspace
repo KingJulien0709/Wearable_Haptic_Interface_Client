@@ -1,0 +1,42 @@
+{
+	"folders": [
+		{
+			"name": "esp32 test",
+			"path": "../esp32 test"
+		},
+		{
+			"name": "esp receiveboard",
+			"path": "../esp receiveboard"
+		},
+		{
+			"name": "Armband_ESP32",
+			"path": "."
+		},
+		{
+			"name": "OTA_UPDATE",
+			"path": "../OTA_UPDATE"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"atomic": "cpp",
+			"fstream": "cpp",
+			"iomanip": "cpp",
+			"istream": "cpp",
+			"list": "cpp",
+			"ostream": "cpp",
+			"random": "cpp",
+			"sstream": "cpp",
+			"streambuf": "cpp",
+			"xlocbuf": "cpp",
+			"*.tcc": "cpp",
+			"iosfwd": "cpp",
+			"limits": "cpp",
+			"shared_mutex": "cpp",
+			"xiosbase": "cpp",
+			"regex": "cpp",
+			"cmath": "cpp",
+			"functional": "cpp"
+		}
+	}
+}
