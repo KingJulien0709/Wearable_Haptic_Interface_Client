@@ -26,6 +26,7 @@ void drv_single_init(uint8_t channel){
     drv_set_realtime_mode();
     drv_set_bit_in_register(0x1D,3,1); //set rtp format to unsigned 8 bit
     drv_set_lra_frequency();
+    drv_set_rated_voltage();
 }
 
 
@@ -136,17 +137,17 @@ void drv_set_erm_lra_mode(uint8_t mode){
  * the value as byte is calculated by rounding the value as float to the nearest unsigned uint8_t value
  */
 void drv_set_lra_frequency(void){
-    float ol_lra_perioad = (1/(DRV_LRA_FREQUENCY_HZ*98.49*pow10(-6)));
+    float ol_lra_perioad = (1/(DRV_LRA_FREQUENCY_HZ*98.49*pow10(-6))); //formula from datasheet
     log_debug("Set frequency(float) to "+String(ol_lra_perioad));
-    uint8_t ol_lra_perioad_uint8 = (uint8_t) floorf(ol_lra_perioad+0.5);
+    uint8_t ol_lra_perioad_uint8 = (uint8_t) floorf(ol_lra_perioad+0.5); //round up to the nearest uint8_t
     log_debug("Set frequency(byte) to "+String(ol_lra_perioad_uint8));
     i2c_write_with_register(DRV_ADDR,DRV_LRA_FREQUENCY_REG,ol_lra_perioad_uint8);
 }
 
 void drv_set_rated_voltage(void){
-    float od_clamp = DRV_RATED_VOLTAGE/(0,2132*sqrt(1-DRV_LRA_FREQUENCY_HZ*0.0008));
+    float od_clamp = DRV_RATED_VOLTAGE/(0,2132*sqrt(1-DRV_LRA_FREQUENCY_HZ*0.0008)); //formula from datasheet
     log_debug("Set rated voltage(float) to "+String(od_clamp));
-    uint8_t od_clamp_uint8 = (uint8_t) floorf(od_clamp);
+    uint8_t od_clamp_uint8 = (uint8_t) floorf(od_clamp); //round to the nearest uint8_t
     log_debug("Set rated voltage(byte) to "+String(od_clamp_uint8));
     i2c_write_with_register(DRV_ADDR,DRV_RATED_VOLTAGE_REG,od_clamp_uint8);
 }

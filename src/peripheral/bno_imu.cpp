@@ -18,13 +18,13 @@ void bno_imu_init(){
 
 
 void bno_imu_get_sensor_data_struct_char(char* buf){
+    i2c_multiplexer_change_channel(BNO_IC2_CHANNEL);
     if(!bno.begin(OPERATION_MODE_NDOF)){
         /* There was a problem detecting the BNO055 ... check your connections */
         Serial.print("no BNO055 detected.");
         buf[0]='\0';
         return; //return and set the given array to empty string
     }
-    i2c_multiplexer_change_channel(BNO_IC2_CHANNEL);
     imu::Quaternion quat = bno.getQuat(); //get the quaternion from the imu
     bno.getEvent(&event_acceleration,Adafruit_BNO055::VECTOR_ACCELEROMETER); //get the acceleration from the imu
 

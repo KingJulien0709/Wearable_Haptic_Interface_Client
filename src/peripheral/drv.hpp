@@ -29,7 +29,7 @@
 #define DRV_LRA_FREQUENCY_HZ 160  //or 320 depending on vibration axis
 #define DRV_LRA_FREQUENCY_REG 0x20
 
-#define DRV_RATED_VOLTAGE 1.6
+#define DRV_RATED_VOLTAGE 2.33
 #define DRV_RATED_VOLTAGE_REG 0x17
 
 

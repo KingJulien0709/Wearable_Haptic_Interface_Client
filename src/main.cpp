@@ -13,12 +13,16 @@
 #include <Wire.h>
 #include "ESPAsyncWebServer.h"
 #include "peripheral/battery_management.hpp"
+#include "freertos/semphr.h"
+#include "FreeRTOS.h"
+#include "freertos/task.h"
 
 
 #define UPDATEINTERVAL_MS 20
+#define ENABLE_MULTITASKING 0 //set to 1 to enable multitasking else run in super-loop
 
-#define WIFI_SSID "Debug Network"//"FRITZ!Box Mesh-KK"
-#define WIFI_PASSWORT "1234567890"//"00965943372456668602"////
+#define WIFI_SSID "Debug Network"
+#define WIFI_PASSWORT "1234567890"
 
 #define HOST_IP_ADDR "192.168.43.226"//"192.168.178.31"//"192.168.178.44" //ip of the tcp master device
 #define PORT 5000 //port of the tcp socket
@@ -30,10 +34,7 @@
 
 TCP_Socket_Communication my_tcp_socket(PORT,HOST_IP_ADDR);
 AsyncWebServer server(80);
-
-TaskHandle_t mainTask;//currently not used. maybe it will be implemented for dual core functionality
-TaskHandle_t outputTask;//currently not used. Should be used for output to the drv driver and reduce the time needed for the receive function. Need to watch if i2c_multiplexer is thread safe. 
-TaskHandle_t inputTask;//currently not used. Should be used for input from the IMU and reduce the time needed for the send function. Need to watch if i2c_multiplexer is thread safe.
+SemaphoreHandle_t xMutex;
 
 
 //declare functions
@@ -41,6 +42,31 @@ void handle_position_data();
 void handle_haptic_feedback();
 void handle_delay(long a);
 
+void handle_position_data_task(void* pvParameters){//task to handle the position data. runns on the first core(0)
+  while(1){
+    long start_time=0;
+    if(xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE){//function to take the mutex if it is available
+      start_time = millis();
+      handle_position_data(); //function to handle the position data
+      AsyncElegantOTA.loop(); //function to handle the ota update. needs to be called in the loop
+      xSemaphoreGive(xMutex); //function to give the mutex back
+    }
+    vTaskDelay(20-(millis()-start_time)/portTICK_PERIOD_MS); //delay to run the task every 20ms->50Hz
+  }
+}
+
+void handle_haptic_feedback_task(void* pvParameters){//task to handle the haptic feedback. runns on the second core(1)
+  while(1){
+    long start_time=0;
+    if(xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE){ //function to take the mutex if it is available
+      start_time = millis();
+      handle_haptic_feedback(); //function to handle the haptic feedback
+      AsyncElegantOTA.loop(); //function to handle the ota update. needs to be called in the loop
+      xSemaphoreGive(xMutex); //function to give the mutex back
+    }
+    vTaskDelay(20-(millis()-start_time)/portTICK_PERIOD_MS);//delay to run the task every 20ms->50Hz
+  }
+}
 
 
 void setup() {
@@ -80,20 +106,42 @@ void setup() {
     vTaskDelay(1000/portTICK_PERIOD_MS);
   }
   log_info("tcp connected");
+  if(ENABLE_MULTITASKING==1){
+    xMutex = xSemaphoreCreateMutex(); //function to create a mutex used by the parallel tasks
+    xTaskCreatePinnedToCore(handle_position_data_task, "handle_position_data_task", 10000, NULL, 1, NULL, 1); //function to create a task for handling the position data
+    xTaskCreatePinnedToCore(handle_haptic_feedback_task, "handle_haptic_feedback_task", 10000, NULL, 1, NULL, 0); //function to create a task for handling the haptic feedback
+    delay(1000);
+  }
 }
 
 
 void loop() {
-  
-  long start_time = millis();
-  
-  handle_position_data();
+  byte error, address;
+  int deviceCount = 0;
 
-  handle_haptic_feedback();
+  Serial.println("Scanning...");
 
-  AsyncElegantOTA.loop(); //function to handle the ota update. needs to be called in the loop
-  handle_delay(start_time);
-  
+  for (address = 1; address < 127; ++address) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0) {
+      Serial.print("Device found at address 0x");
+      if (address < 16) {
+        Serial.print("0");
+      }
+      Serial.print(address, HEX);
+      Serial.println();
+      deviceCount++;
+    }
+  }
+  if(ENABLE_MULTITASKING==2){//execute the following code in a super-loop
+    long start_time = millis();
+    handle_position_data();
+    handle_haptic_feedback();
+    AsyncElegantOTA.loop(); //function to handle the ota update. needs to be called in the loop
+    handle_delay(start_time);
+  }
 }
 
 
@@ -110,13 +158,6 @@ void handle_delay(long a){
   }
 }
 
-//void mainTaskFunction( void * pvParameters ){
-//  for(;;){
-//    handle_position_data();
-//    handle_haptic_feedback();
-//    vTaskDelay(250/portTICK_PERIOD_MS);
-//  }
-//}
 
 /**
  * @brief Function for dealing with the process for getting data from the imu to the master
