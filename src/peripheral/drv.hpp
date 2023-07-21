@@ -3,7 +3,7 @@
 #define _DRV_H
 
 #include "stdint.h"
-#include "i2c_multiplexer.hpp"
+#include "i2c_multiplexer.hpp"  
 #include "service/i2c.hpp"
 #include "Wire.h"
 #include "utils/log.hpp"
@@ -30,7 +30,7 @@
 #define DRV_LRA_FREQUENCY_REG 0x20
 
 #define DRV_RATED_VOLTAGE 2.33
-#define DRV_RATED_VOLTAGE_REG 0x17
+#define DRV_RATED_VOLTAGE_REG 0x16
 
 
 void drv_init();
@@ -44,4 +44,5 @@ void drv_set_bit_in_register(uint8_t register_v,uint8_t bit_num,uint8_t value);
 void drv_set_bit_in_register_for_all_devices(uint8_t register_v,uint8_t bit_num,uint8_t value);
 void drv_set_lra_frequency(void);
 void drv_set_rated_voltage(void);
+void drv_set_neutral(void);
 #endif

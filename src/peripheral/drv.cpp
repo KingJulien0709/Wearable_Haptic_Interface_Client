@@ -8,11 +8,14 @@ uint8_t state = DRV_STATE_STANDBY;
  * 
  */
 void drv_init(){
-    drv_power_state_machine(DRV_STATE_STANDBY);
+    digitalWrite(DRV_ENABLE_PIN,1);
+    //drv_power_state_machine(DRV_STATE_STANDBY);
     for(uint8_t i=0;i<DRV_DEVICE_COUNTER;i++){
         drv_single_init(i);
     }
-    drv_power_state_machine(DRV_STATE_ACTIVE);
+    drv_set_neutral();
+    
+    //drv_power_state_machine(DRV_STATE_ACTIVE);
 }
 
 /**
@@ -22,9 +25,10 @@ void drv_init(){
  */
 void drv_single_init(uint8_t channel){
     i2c_multiplexer_change_channel(channel);
-    drv_set_erm_lra_mode(DRV_LRA_MODE);
+    drv_set_erm_lra_mode(DRV_LRA_MODE);//LRA mode
     drv_set_realtime_mode();
     drv_set_bit_in_register(0x1D,3,1); //set rtp format to unsigned 8 bit
+    drv_set_bit_in_register(0x1D,0,1);
     drv_set_lra_frequency();
     drv_set_rated_voltage();
 }
@@ -145,13 +149,20 @@ void drv_set_lra_frequency(void){
 }
 
 void drv_set_rated_voltage(void){
-    float od_clamp = DRV_RATED_VOLTAGE/(0,2132*sqrt(1-DRV_LRA_FREQUENCY_HZ*0.0008)); //formula from datasheet
+    float od_clamp = DRV_RATED_VOLTAGE/(0.2132 * sqrt(1.00 - (0.0008 * DRV_LRA_FREQUENCY_HZ))); //formula from datasheet
     log_debug("Set rated voltage(float) to "+String(od_clamp));
     uint8_t od_clamp_uint8 = (uint8_t) floorf(od_clamp); //round to the nearest uint8_t
     log_debug("Set rated voltage(byte) to "+String(od_clamp_uint8));
-    i2c_write_with_register(DRV_ADDR,DRV_RATED_VOLTAGE_REG,od_clamp_uint8);
+    i2c_write_with_register(DRV_ADDR,0x16,0x3E);//rated_volt_uint8);
+    i2c_write_with_register(DRV_ADDR,0x17,0x8C);//od_clamp_uint8
 }
 
 uint8_t drv_get_power_state(){
     return state;
+}
+
+void drv_set_neutral(void){
+    for(uint8_t i=0;i<DRV_DEVICE_COUNTER;i++){
+        drv_run_realtime(i,127); //function to set the current of the drv to 0(127 is the middle value of the 8bit dac)
+    }
 }

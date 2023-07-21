@@ -1,6 +1,6 @@
 #include "tcp_socket_communication.hpp"
 
-
+String buffer_string;
 /**
  * @brief Construct a new TCP Socket Communication object the tcp communication with the master server
  *  AF_INET - ip4
@@ -103,6 +103,21 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_blocking(){
         data[length] = 0;
         log_debug("[tcp_socket_communication]: received data:" + String(data));
     }
+
+    buffer_string+=String(data);
+    int last_index = buffer_string.lastIndexOf("}");
+    if(last_index!=-1){
+        int first_substring_index = buffer_string.substring(0,last_index).lastIndexOf("{");
+        if(first_substring_index!=-1){
+            String json_string = buffer_string.substring(first_substring_index,last_index+1);
+            json_string.replace("\\","");
+            json_string.replace("\"","");
+            json_string.toCharArray(data,json_string.length()+1);
+            data[json_string.length()] = 0;
+        }
+    }
+    buffer_string = buffer_string.substring(last_index+1);
+    log_info("buffer_string:" + String(data));
     return data;
 }
 /**
@@ -129,6 +144,22 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_non_blocking(){
         data[length] = 0;
         log_debug("received data:" + String(data));
     }
+
+    buffer_string+=String(data);
+    int last_index = buffer_string.lastIndexOf("}");
+    if(last_index!=-1){
+        int first_substring_index = buffer_string.substring(0,last_index).lastIndexOf("{");
+        if(first_substring_index!=-1){
+            String json_string = buffer_string.substring(first_substring_index,last_index+1);
+            json_string.replace("\\","");
+            json_string.replace("\"","");
+            json_string.toCharArray(data,json_string.length()+1);
+            data[json_string.length()] = 0;
+        }
+    }
+    buffer_string = buffer_string.substring(last_index+1);
+    log_info("buffer_string:" + String(data));
+
     return data;
 }
 

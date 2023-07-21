@@ -9,7 +9,7 @@
 #define TCP_SOCKET_READ 0
 #define TCP_SOCKET_WRITE 1
 
-#define TCP_SOCKET_READ_SIZE 64
+#define TCP_SOCKET_READ_SIZE 128
 #define TCP_SOCKET_SEND_SIZE 128
 
 class TCP_Socket_Communication{
