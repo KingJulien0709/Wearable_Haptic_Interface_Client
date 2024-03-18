@@ -67,7 +67,7 @@ void TCP_Socket_Communication::tcp_socket_reconnect(){
  * @return int amount of bytes sent. If an error occured, the value is negative or 
  * 0 if no data was sent.
  */
-int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint8_t len){
+int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint16_t len){
     if(!blocking_mode_){
         tcp_socket_configure_block_mode(true);// send function has to be in blocking mode and wait until data is sent, because the data can be important for the master. 
     }

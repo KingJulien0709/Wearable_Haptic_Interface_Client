@@ -19,13 +19,13 @@
 #include "freertos/task.h"
 
 
-#define UPDATEINTERVAL_MS 20 //update interval in ms	
+#define UPDATEINTERVAL_MS 50 //update interval in ms	
 #define ENABLE_MULTITASKING 0 //set to 1 to enable multitasking else run in super-loop
 
 #define WIFI_SSID "Debug Network"
 #define WIFI_PASSWORT "1234567890"
 
-#define HOST_IP_ADDR "192.168.43.226"//"192.168.178.31"//"192.168.178.44" //ip of the tcp master device
+#define HOST_IP_ADDR "192.168.131.131"//"192.168.178.31"//"192.168.178.44" //ip of the tcp master device
 #define PORT 5000 //port of the tcp socket
 
 
@@ -76,29 +76,16 @@ void setup() {
   
   Serial.begin(115200); 
 
-  log_init(LOG_LEVEL_INFO); //set log levels for all modules to info
+  log_init(LOG_LEVEL_DEBUG); //set log levels for all modules to info
   
   log_info("setup");
 
   init_pins(); //function to initialize the pins
   log_info("pins init done");
-  
-  i2c_multiplexer_init(); //function to initialize the i2c multiplexer
-  log_info("i2c multiplexer init done");
-  
-  bno_imu_init(); //function to initialize the imu
-  log_info("bno init done");
-
-  drv_init(); //function to initialize the drv driver
-  log_info("drvinit done");
-
-  force_sensor_init(); //function to initialize the force sensor
-  log_info("force sensor init done");
 
   battery_management_set_normal_charging(); //function to set the fast charging mode for the battery management
   log_info("battery set fast charging");
 
-  
   communication_connect_wifi(WIFI_SSID,WIFI_PASSWORT); //function to connect to the wifi
   log_info("wifi connected");	
   log_info(String(WiFi.localIP().toString())+"");
@@ -109,6 +96,24 @@ void setup() {
   AsyncElegantOTA.begin(&server); //function to set up the ota update
   server.begin(); //function to start the http server for ota updates
   Serial.println("HTTP server started");
+  
+  i2c_multiplexer_init(); //function to initialize the i2c multiplexer
+  log_info("i2c multiplexer init done");
+  
+  i2c_multiplexer_change_channel(BNO_IC2_CHANNEL); //function to change the channel of the i2c multiplexer to the channel of the imu
+  i2c_read_connected_devices(); //function to read the connected devices
+
+  bno_imu_init_bno085(); //function to initialize the imu
+  log_info("bno init done");
+
+  drv_init(); //function to initialize the drv driver
+  log_info("drvinit done");
+
+  //digitalWrite(DRV_ENABLE_PIN,0);//disable the drv driver for charging the battery
+
+  force_sensor_init(); //function to initialize the force sensor
+  log_info("force sensor init done");
+
 
   my_tcp_socket.tcp_socket_init(); //function to initialize the tcp socket
   while(my_tcp_socket.tcp_socket_connect()!=0){ //function to connect to the tcp master device
@@ -128,7 +133,7 @@ void setup() {
 void loop() {
   if(ENABLE_MULTITASKING==0){//execute the following code in a super-loop
     long start_time = millis();
-    //handle_position_data();  only activate if imu is connected
+    handle_position_data();  //only activate if imu is connected
     handle_haptic_feedback();
     //Serial.println(force_sensor_read(), 2);
     AsyncElegantOTA.loop(); //function to handle the ota update. needs to be called in the loop
@@ -158,7 +163,7 @@ void handle_delay(long a){
 void handle_position_data(){
   //long a=millis();
   char p[TCP_SOCKET_SEND_SIZE];
-  bno_imu_get_sensor_data_struct_char(p);//get orientation and acceleration data formatted as json string from the imu
+  bno_imu_get_sensor_data_struct_char_bno085(p);//get orientation and acceleration data formatted as json string from the imu
   if(strlen(p)<=1){ //if no data is received or imu couldnt be initialized/found, skip round
     log_error("data couldnt be read for the bn055"); 
     return;
@@ -168,6 +173,7 @@ void handle_position_data(){
     //log_info("successful sent and collected data in ms: "+ String(millis()-a));
   }else{
     //could handle error here, else just skip round
+    log_debug("data couldnt be sent to the master");
   }
   
 }

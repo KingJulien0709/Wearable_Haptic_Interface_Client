@@ -38,4 +38,14 @@ uint8_t i2c_read_with_register(uint8_t address, uint8_t register_address){
 }
 
 
-
+void i2c_read_connected_devices(void){
+    for (uint8_t address = 1; address < 127; address++) {
+        Wire.beginTransmission(address);
+        uint8_t error = Wire.endTransmission();
+        if (error == 0) {
+            Serial.print("Gerät gefunden an Adresse 0x");
+            Serial.print(address, HEX);
+            Serial.println();
+        }
+    }
+}

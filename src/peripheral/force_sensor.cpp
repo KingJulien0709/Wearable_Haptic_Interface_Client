@@ -8,7 +8,9 @@ void force_sensor_init(){
 
 float force_sensor_read(){
     float vout = analogReadMilliVolts(FORCE_SENSOR_ADC_PIN);
-    float resistance = FORCE_SENOR_RESISTANCE*(FORCE_SENOR_VOLTAGE-vout)/vout;
+    //Serial.print("vout: ");
+    //Serial.println(vout);
+    float resistance = (1-(FORCE_SENOR_VOLTAGE-vout)/FORCE_SENOR_VOLTAGE);
     if(resistance > 10000){
         resistance = 10000;
     }
