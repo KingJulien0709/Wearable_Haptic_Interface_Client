@@ -13,23 +13,20 @@
 #include <Wire.h>
 #include "ESPAsyncWebServer.h"
 #include "peripheral/battery_management.hpp"
+#include "peripheral/force_sensor.hpp"
 #include "freertos/semphr.h"
 #include "FreeRTOS.h"
 #include "freertos/task.h"
 
 
-#define UPDATEINTERVAL_MS 20
+#define UPDATEINTERVAL_MS 50 //update interval in ms	
 #define ENABLE_MULTITASKING 0 //set to 1 to enable multitasking else run in super-loop
 
 #define WIFI_SSID "Debug Network"
 #define WIFI_PASSWORT "1234567890"
 
-#define HOST_IP_ADDR "192.168.43.226"//"192.168.178.31"//"192.168.178.44" //ip of the tcp master device
+#define HOST_IP_ADDR "192.168.131.131"//"192.168.178.31"//"192.168.178.44" //ip of the tcp master device
 #define PORT 5000 //port of the tcp socket
-
-//#define PIN_SDA currently not needed, because default pin is used
-//#define PIN_SCLK currently not needed, because default pin is used
-
 
 
 TCP_Socket_Communication my_tcp_socket(PORT,HOST_IP_ADDR);
@@ -68,28 +65,27 @@ void handle_haptic_feedback_task(void* pvParameters){//task to handle the haptic
   }
 }
 
+void init_pins(){
+  pinMode(DRV_ENABLE_PIN,OUTPUT); //set the drv enable pin to output
+  pinMode(BATTERY_MANAGEMENT_ENABLE_PIN_1,OUTPUT); //set the battery management enable pin 1 to output
+  pinMode(BATTERY_MANAGEMENT_ENABLE_PIN_2,OUTPUT); //set the battery management enable pin 2 to output
+}
+
 
 void setup() {
   
   Serial.begin(115200); 
 
-  log_init(LOG_LEVEL_INFO); //set log levels for all modules to info
+  log_init(LOG_LEVEL_DEBUG); //set log levels for all modules to info
   
   log_info("setup");
 
-  battery_management_set_fast_charging(); //function to set the fast charging mode for the battery management
-  
-  i2c_multiplexer_init(); //function to initialize the i2c multiplexer
-  log_info("i2c multiplexer init done");
-  
-  bno_imu_init(); //function to initialize the imu
+  init_pins(); //function to initialize the pins
+  log_info("pins init done");
 
-  //log_info("bno init done");
+  battery_management_set_normal_charging(); //function to set the fast charging mode for the battery management
+  log_info("battery set fast charging");
 
-  drv_init(); //function to initialize the drv driver
-
-  log_info("drvinit done");
-  
   communication_connect_wifi(WIFI_SSID,WIFI_PASSWORT); //function to connect to the wifi
   log_info("wifi connected");	
   log_info(String(WiFi.localIP().toString())+"");
@@ -100,6 +96,24 @@ void setup() {
   AsyncElegantOTA.begin(&server); //function to set up the ota update
   server.begin(); //function to start the http server for ota updates
   Serial.println("HTTP server started");
+  
+  i2c_multiplexer_init(); //function to initialize the i2c multiplexer
+  log_info("i2c multiplexer init done");
+  
+  i2c_multiplexer_change_channel(BNO_IC2_CHANNEL); //function to change the channel of the i2c multiplexer to the channel of the imu
+  i2c_read_connected_devices(); //function to read the connected devices
+
+  bno_imu_init_bno085(); //function to initialize the imu
+  log_info("bno init done");
+
+  drv_init(); //function to initialize the drv driver
+  log_info("drvinit done");
+
+  //digitalWrite(DRV_ENABLE_PIN,0);//disable the drv driver for charging the battery
+
+  force_sensor_init(); //function to initialize the force sensor
+  log_info("force sensor init done");
+
 
   my_tcp_socket.tcp_socket_init(); //function to initialize the tcp socket
   while(my_tcp_socket.tcp_socket_connect()!=0){ //function to connect to the tcp master device
@@ -108,37 +122,20 @@ void setup() {
   log_info("tcp connected");
   if(ENABLE_MULTITASKING==1){
     xMutex = xSemaphoreCreateMutex(); //function to create a mutex used by the parallel tasks
-    xTaskCreatePinnedToCore(handle_position_data_task, "handle_position_data_task", 10000, NULL, 1, NULL, 1); //function to create a task for handling the position data
+    //xTaskCreatePinnedToCore(handle_position_data_task, "handle_position_data_task", 10000, NULL, 1, NULL, 1); //function to create a task for handling the position data
     xTaskCreatePinnedToCore(handle_haptic_feedback_task, "handle_haptic_feedback_task", 10000, NULL, 1, NULL, 0); //function to create a task for handling the haptic feedback
     delay(1000);
   }
+  
 }
 
 
 void loop() {
-  byte error, address;
-  int deviceCount = 0;
-
-  Serial.println("Scanning...");
-
-  for (address = 1; address < 127; ++address) {
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
-
-    if (error == 0) {
-      Serial.print("Device found at address 0x");
-      if (address < 16) {
-        Serial.print("0");
-      }
-      Serial.print(address, HEX);
-      Serial.println();
-      deviceCount++;
-    }
-  }
-  if(ENABLE_MULTITASKING==2){//execute the following code in a super-loop
+  if(ENABLE_MULTITASKING==0){//execute the following code in a super-loop
     long start_time = millis();
-    handle_position_data();
+    handle_position_data();  //only activate if imu is connected
     handle_haptic_feedback();
+    //Serial.println(force_sensor_read(), 2);
     AsyncElegantOTA.loop(); //function to handle the ota update. needs to be called in the loop
     handle_delay(start_time);
   }
@@ -151,7 +148,7 @@ void loop() {
  * @param a time when the loop started
  */
 void handle_delay(long a){
-  log_info(String("time needed for loop: ")+String(millis()-a));
+  //log_info(String("time needed for loop: ")+String(millis()-a));
   int delay_time = UPDATEINTERVAL_MS-(millis()-a);
   if (delay_time>0){
     vTaskDelay(delay_time/portTICK_PERIOD_MS);
@@ -166,7 +163,7 @@ void handle_delay(long a){
 void handle_position_data(){
   //long a=millis();
   char p[TCP_SOCKET_SEND_SIZE];
-  bno_imu_get_sensor_data_struct_char(p);//get orientation and acceleration data formatted as json string from the imu
+  bno_imu_get_sensor_data_struct_char_bno085(p);//get orientation and acceleration data formatted as json string from the imu
   if(strlen(p)<=1){ //if no data is received or imu couldnt be initialized/found, skip round
     log_error("data couldnt be read for the bn055"); 
     return;
@@ -176,6 +173,7 @@ void handle_position_data(){
     //log_info("successful sent and collected data in ms: "+ String(millis()-a));
   }else{
     //could handle error here, else just skip round
+    log_debug("data couldnt be sent to the master");
   }
   
 }
@@ -192,7 +190,9 @@ void handle_haptic_feedback(){
     //log_trace("no new data");//can skip input msg for debugging possible
     return;
   }else{
-    StaticJsonDocument<200> doc; 
+    log_info(buff);
+    
+    StaticJsonDocument<400> doc; 
     DeserializationError error = deserializeJson(doc,buff);//deserialize json string to json object
     // Empyt Input error when no msg received  ;  Invalid Input error when json String not complete
     if(error){

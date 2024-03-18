@@ -4,11 +4,11 @@
 
 #include <Arduino.h>
 
-#define FORCE_SENSOR_ADC_PIN 34
-#define FORCE_SENOR_VOLTAGE 3.3
+#define FORCE_SENSOR_ADC_PIN 35
+#define FORCE_SENOR_VOLTAGE 3300
 #define FORCE_SENOR_RESISTANCE 10000
 
 void force_sensor_init();
-uint8_t force_sensor_read();
+float force_sensor_read();
 
 #endif

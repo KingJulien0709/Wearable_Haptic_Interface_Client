@@ -1,6 +1,6 @@
 #include "tcp_socket_communication.hpp"
 
-
+String buffer_string;
 /**
  * @brief Construct a new TCP Socket Communication object the tcp communication with the master server
  *  AF_INET - ip4
@@ -67,7 +67,7 @@ void TCP_Socket_Communication::tcp_socket_reconnect(){
  * @return int amount of bytes sent. If an error occured, the value is negative or 
  * 0 if no data was sent.
  */
-int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint8_t len){
+int TCP_Socket_Communication::tcp_socket_send_string(char *data,uint16_t len){
     if(!blocking_mode_){
         tcp_socket_configure_block_mode(true);// send function has to be in blocking mode and wait until data is sent, because the data can be important for the master. 
     }
@@ -103,6 +103,21 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_blocking(){
         data[length] = 0;
         log_debug("[tcp_socket_communication]: received data:" + String(data));
     }
+
+    buffer_string+=String(data);
+    int last_index = buffer_string.lastIndexOf("}");
+    if(last_index!=-1){
+        int first_substring_index = buffer_string.substring(0,last_index).lastIndexOf("{");
+        if(first_substring_index!=-1){
+            String json_string = buffer_string.substring(first_substring_index,last_index+1);
+            json_string.replace("\\","");
+            json_string.replace("\"","");
+            json_string.toCharArray(data,json_string.length()+1);
+            data[json_string.length()] = 0;
+        }
+    }
+    buffer_string = buffer_string.substring(last_index+1);
+    log_info("buffer_string:" + String(data));
     return data;
 }
 /**
@@ -129,6 +144,22 @@ char* TCP_Socket_Communication::tcp_socket_receive_string_non_blocking(){
         data[length] = 0;
         log_debug("received data:" + String(data));
     }
+
+    buffer_string+=String(data);
+    int last_index = buffer_string.lastIndexOf("}");
+    if(last_index!=-1){
+        int first_substring_index = buffer_string.substring(0,last_index).lastIndexOf("{");
+        if(first_substring_index!=-1){
+            String json_string = buffer_string.substring(first_substring_index,last_index+1);
+            json_string.replace("\\","");
+            json_string.replace("\"","");
+            json_string.toCharArray(data,json_string.length()+1);
+            data[json_string.length()] = 0;
+        }
+    }
+    buffer_string = buffer_string.substring(last_index+1);
+    log_info("buffer_string:" + String(data));
+
     return data;
 }
 
